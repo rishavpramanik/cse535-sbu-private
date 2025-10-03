@@ -1,0 +1,4 @@
+SetNumber,Transactions,LiveNodes
+1,"(A,C,5),(C,E,4),(B,D,2),(E,A,10),(E,C,3)","[n1,n2,n3,n4,n5]"
+2,"(A,E,4),(C,A,1),(A,C,7)","[n1,n3,n5]"
+3,"(B,A,3),(D,B,6),(C,D,2)","[n2,n3,n4,n5]"
