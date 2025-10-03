@@ -19,6 +19,10 @@ class Node:
         self.host = "localhost"
         self.all_nodes = all_nodes  # node_id -> (host, port)
         
+        # Locks (initialize first)
+        self.balance_lock = threading.RLock()
+        self.log_lock = threading.RLock()
+        
         # Banking state
         self.balances = {}  # client_id -> balance
         self.initialize_balances()
@@ -39,10 +43,6 @@ class Node:
         self.last_heartbeat = {}  # node_id -> timestamp
         self.heartbeat_interval = 2.0
         self.failure_timeout = 6.0
-        
-        # Locks
-        self.balance_lock = threading.RLock()
-        self.log_lock = threading.RLock()
         
     def initialize_balances(self):
         """Initialize client balances to 10 each"""
