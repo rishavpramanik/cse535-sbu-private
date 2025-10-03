@@ -5,6 +5,12 @@ Basic functionality test for the Distributed Paxos Banking System.
 
 import time
 import threading
+import sys
+import os
+
+# Add src directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 from main import BankingSystem
 from messages import Transaction
 

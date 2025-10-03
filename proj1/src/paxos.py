@@ -102,7 +102,7 @@ class PaxosLeader:
             seq_num = remote_entry.seq_num
             if seq_num not in local_map:
                 # Add missing entry
-                self.state.accept_log.append(remote_entry)
+                local_map[seq_num] = remote_entry
             else:
                 # Keep the one with higher status priority (E > C > A > X)
                 local_entry = local_map[seq_num]

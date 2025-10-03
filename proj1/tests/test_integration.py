@@ -12,6 +12,10 @@ from unittest.mock import Mock, patch, MagicMock
 import socket
 
 # Import our modules
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 from messages import *
 from paxos import PaxosState, PaxosLeader, PaxosBackup
 from node import Node
@@ -83,15 +87,6 @@ class TestLeaderElection(unittest.TestCase):
         leader = nodes["n1"].paxos_leader
         leader.start_leader_election(1)
         
-        # Add debug to merge_accept_log
-        original_merge = leader._merge_accept_log
-        def debug_merge(remote_log):
-            print(f"DEBUG: Merging remote log with {len(remote_log)} entries: {[(e.seq_num, e.status) for e in remote_log]}")
-            result = original_merge(remote_log)
-            print(f"DEBUG: After merge, local log has {len(leader.state.accept_log)} entries: {[(e.seq_num, e.status) for e in leader.state.accept_log]}")
-            return result
-        leader._merge_accept_log = debug_merge
-        
         # Manually ensure all nodes are in prepare_responses for the test
         leader.state.prepare_responses[1] = []
         
@@ -101,28 +96,15 @@ class TestLeaderElection(unittest.TestCase):
         ack_n2 = AckMessage("n2", "n1", 1, nodes["n2"].paxos_state.accept_log)
         ack_n3 = AckMessage("n3", "n1", 1, nodes["n3"].paxos_state.accept_log)
         
-        print(f"DEBUG: n2 log before ACK: {[(e.seq_num, e.status) for e in nodes['n2'].paxos_state.accept_log]}")
-        print(f"DEBUG: n3 log before ACK: {[(e.seq_num, e.status) for e in nodes['n3'].paxos_state.accept_log]}")
-        
-        result1 = leader.handle_ack(ack_n1)
-        result2 = leader.handle_ack(ack_n2)
-        result3 = leader.handle_ack(ack_n3)
-        
-        print(f"DEBUG: ACK results: {result1}, {result2}, {result3}")
-        print(f"DEBUG: Leader log after ACKs: {[(e.seq_num, e.status) for e in leader.state.accept_log]}")
+        leader.handle_ack(ack_n1)
+        leader.handle_ack(ack_n2)
+        leader.handle_ack(ack_n3)
         
         # n1 should become leader and merge logs
         self.assertTrue(leader.state.is_leader)
         
         # Check log merging - should have entries 0, 1, 2
         seq_nums = {entry.seq_num for entry in leader.state.accept_log}
-        
-        # Debug: print actual log contents
-        if seq_nums != {0, 1, 2}:
-            print(f"DEBUG: Expected {{0, 1, 2}}, got {seq_nums}")
-            for entry in leader.state.accept_log:
-                print(f"  Entry {entry.seq_num}: {entry.transaction}, status={entry.status}, noop={entry.is_noop}")
-        
         self.assertEqual(seq_nums, {0, 1, 2})
         
         # Entry 0 should have status "E" (highest priority)
