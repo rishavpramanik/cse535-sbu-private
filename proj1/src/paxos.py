@@ -51,7 +51,9 @@ class PaxosLeader:
         self.node.broadcast_message(prepare_msg)
         
         # Set timer for election timeout
-        threading.Timer(5.0, self._election_timeout, args=[new_view_num]).start()
+        timer = threading.Timer(5.0, self._election_timeout, args=[new_view_num])
+        self.node.add_timer(timer)
+        timer.start()
     
     def handle_prepare(self, msg: PrepareMessage):
         """Handle incoming PREPARE message"""
@@ -159,13 +161,24 @@ class PaxosLeader:
     
     def _election_timeout(self, view_num: int):
         """Handle election timeout"""
+        # Check if node is still running
+        if not self.node.running:
+            return
+            
         with self.state.state_lock:
             if (view_num == self.state.view_num and 
                 not self.state.is_leader and 
                 len(self.state.prepare_responses.get(view_num, [])) < 3):
                 # Election failed, try again with higher view number
                 print(f"Node {self.state.node_id} election timeout for view {view_num}")
-                threading.Timer(2.0, lambda: self.start_leader_election(view_num + 1)).start()
+                timer = threading.Timer(2.0, lambda: self._safe_start_election(view_num + 1))
+                self.node.add_timer(timer)
+                timer.start()
+    
+    def _safe_start_election(self, view_num: int):
+        """Safely start election only if node is still running"""
+        if self.node.running:
+            self.start_leader_election(view_num)
     
     def handle_client_request(self, transaction: Transaction, client_id: str, client_timestamp: int):
         """Handle client transaction request"""

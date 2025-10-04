@@ -38,6 +38,10 @@ class Node:
         self.message_log = []  # All messages handled by this node
         self.pending_client_requests = {}  # seq_num -> (client_id, timestamp)
         
+        # Thread management
+        self.threads = []  # Track all threads for proper shutdown
+        self.timers = []   # Track all timers for proper shutdown
+        
         # Failure detection
         self.alive_nodes = set(all_nodes.keys())
         self.last_heartbeat = {}  # node_id -> timestamp
@@ -63,21 +67,56 @@ class Node:
         
         print(f"Node {self.node_id} started on {self.host}:{self.port}")
         
-        # Start threads
-        threading.Thread(target=self._accept_connections, daemon=True).start()
-        threading.Thread(target=self._heartbeat_sender, daemon=True).start()
-        threading.Thread(target=self._failure_detector, daemon=True).start()
-        threading.Thread(target=self._transaction_executor, daemon=True).start()
+        # Start threads and track them
+        t1 = threading.Thread(target=self._accept_connections, daemon=True)
+        t2 = threading.Thread(target=self._heartbeat_sender, daemon=True)
+        t3 = threading.Thread(target=self._failure_detector, daemon=True)
+        t4 = threading.Thread(target=self._transaction_executor, daemon=True)
+        
+        self.threads.extend([t1, t2, t3, t4])
+        
+        for thread in [t1, t2, t3, t4]:
+            thread.start()
         
         # Start leader election if this is the first node
         if self.node_id == "n1":
-            threading.Timer(1.0, lambda: self.paxos_leader.start_leader_election(1)).start()
+            timer = threading.Timer(1.0, lambda: self._safe_start_election(1))
+            self.timers.append(timer)
+            timer.start()
+    
+    def _safe_start_election(self, view_num):
+        """Safely start election only if node is still running"""
+        if self.running:
+            self.paxos_leader.start_leader_election(view_num)
     
     def stop(self):
-        """Stop the node"""
+        """Stop the node and all its threads/timers"""
+        print(f"Node {self.node_id} shutting down...")
         self.running = False
+        
+        # Cancel all timers
+        for timer in self.timers:
+            if timer.is_alive():
+                timer.cancel()
+        self.timers.clear()
+        
+        # Close socket to break accept() calls
         if self.socket:
-            self.socket.close()
+            try:
+                self.socket.close()
+            except Exception:
+                pass
+            self.socket = None
+        
+        # Give threads a moment to see running=False and exit gracefully
+        import time
+        time.sleep(0.1)
+        
+        print(f"Node {self.node_id} stopped")
+    
+    def add_timer(self, timer):
+        """Add a timer to be tracked for shutdown"""
+        self.timers.append(timer)
     
     def _accept_connections(self):
         """Accept incoming connections"""

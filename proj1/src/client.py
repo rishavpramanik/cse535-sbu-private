@@ -46,10 +46,23 @@ class Client:
         threading.Thread(target=self._timeout_handler, daemon=True).start()
     
     def stop(self):
-        """Stop the client"""
+        """Stop the client and all its threads"""
+        print(f"Client {self.client_id} shutting down...")
         self.running = False
+        
+        # Close socket to break accept() calls
         if self.socket:
-            self.socket.close()
+            try:
+                self.socket.close()
+            except Exception:
+                pass
+            self.socket = None
+        
+        # Give threads a moment to see running=False and exit gracefully
+        import time
+        time.sleep(0.1)
+        
+        print(f"Client {self.client_id} stopped")
     
     def _accept_responses(self):
         """Accept incoming response connections"""

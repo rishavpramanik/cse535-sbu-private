@@ -7,6 +7,7 @@ import csv
 import time
 import threading
 import sys
+import signal
 from typing import Dict, List, Tuple, Set
 from node import Node
 from client import ClientManager, parse_transactions
@@ -48,11 +49,17 @@ class BankingSystem:
         """Shutdown all nodes and clients"""
         print("Shutting down system...")
         
+        # Stop clients first
         if self.client_manager:
             self.client_manager.stop_all_clients()
         
-        for node in self.nodes.values():
-            node.stop()
+        # Stop all nodes
+        for node_id, node in self.nodes.items():
+            if node:
+                node.stop()
+        
+        # Give everything time to shut down
+        time.sleep(0.5)
         
         print("System shutdown complete.")
     
@@ -286,6 +293,15 @@ def main():
     
     system = BankingSystem()
     
+    # Set up signal handler for clean shutdown
+    def signal_handler(sig, frame):
+        print("\nReceived interrupt signal, shutting down...")
+        system.shutdown_system()
+        sys.exit(0)
+    
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
     try:
         if mode == "csv":
             if len(sys.argv) < 3:
@@ -311,6 +327,8 @@ def main():
             
     except KeyboardInterrupt:
         print("\nShutting down...")
+    except Exception as e:
+        print(f"Error: {e}")
     finally:
         system.shutdown_system()
 
