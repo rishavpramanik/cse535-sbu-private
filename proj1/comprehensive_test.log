@@ -1,0 +1,1248 @@
+Initializing Distributed Paxos Banking System...
+Client A started on port 8000
+Client B started on port 8001
+Client C started on port 8002
+Client D started on port 8003
+Client E started on port 8004
+Client F started on port 8005
+Client G started on port 8006
+Client H started on port 8007
+Client I started on port 8008
+Client J started on port 8009
+Node n1 started on localhost:5001
+Node n2 started on localhost:5002
+Node n3 started on localhost:5003
+Node n4 started on localhost:5004
+Node n1 failed to send to n5: [Errno 111] Connection refused
+Node n5 started on localhost:5005
+System initialized. Waiting for leader election...
+Node n2 accepted new leader n1 for view 1
+Node n3 accepted new leader n1 for view 1
+Node n4 accepted new leader n1 for view 1
+Node n1 became leader for view 1
+Node n5 accepted new leader n1 for view 1
+Node n2 accepted new leader n1 for view 1
+Node n3 accepted new leader n1 for view 1
+Node n4 accepted new leader n1 for view 1
+Node n1 became leader for view 1
+Node n5 accepted new leader n1 for view 1
+
+==================================================
+Processing Set 1
+==================================================
+Processing 5 items:
+  1. (A,E,3)
+  2. (C,D,1)
+  3. (B,E,4)
+  4. (A,B,2)
+  5. (C,D,2)
+
+Sending 5 remaining transactions...
+Transaction 1: (A,E,3)
+Node n1 executed: (A,E,3)
+Node n2 executed: (A,E,3)
+Client A: Transaction (A,E,3) SUCCESS - Transaction executed successfully
+Node n4 executed: (A,E,3)
+Node n3 executed: (A,E,3)
+Node n5 executed: (A,E,3)
+Transaction 2: (C,D,1)
+Node n2 executed: (C,D,1)
+Node n1 executed: (C,D,1)
+Client C: Transaction (C,D,1) SUCCESS - Transaction executed successfully
+Node n4 executed: (C,D,1)
+Node n3 executed: (C,D,1)
+Node n5 executed: (C,D,1)
+Transaction 3: (B,E,4)
+Node n2 executed: (B,E,4)
+Node n1 executed: (B,E,4)
+Node n4 executed: (B,E,4)
+Client B: Transaction (B,E,4) SUCCESS - Transaction executed successfully
+Node n3 executed: (B,E,4)
+Node n5 executed: (B,E,4)
+Transaction 4: (A,B,2)
+Node n2 executed: (A,B,2)
+Node n4 executed: (A,B,2)
+Node n3 executed: (A,B,2)
+Node n1 executed: (A,B,2)
+Client A: Transaction (A,B,2) SUCCESS - Transaction executed successfully
+Node n5 executed: (A,B,2)
+Transaction 5: (C,D,2)
+Node n2 executed: (C,D,2)
+Node n4 executed: (C,D,2)
+Node n3 executed: (C,D,2)
+Node n1 executed: (C,D,2)
+Client C: Transaction (C,D,2) SUCCESS - Transaction executed successfully
+Node n5 executed: (C,D,2)
+Waiting for responses...
+
+============================== SYSTEM STATE ==============================
+
+=== Database for Node n1 ===
+A: 5
+B: 8
+C: 7
+D: 13
+E: 17
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n2 ===
+A: 5
+B: 8
+C: 7
+D: 13
+E: 17
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n3 ===
+A: 5
+B: 8
+C: 7
+D: 13
+E: 17
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n4 ===
+A: 5
+B: 8
+C: 7
+D: 13
+E: 17
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n5 ===
+A: 5
+B: 8
+C: 7
+D: 13
+E: 17
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+Current Leader: n1
+===========================================================================
+
+Set 1 complete. Auto-continuing...
+
+==================================================
+Processing Set 2
+==================================================
+Simulating failure of n5
+Node n5 simulating failure
+Node n3 failed to send to n5: [Errno 111] Connection refused
+Processing 2 items:
+  1. (B,D,2)
+  2. (E,C,4)
+
+Sending 2 remaining transactions...
+Transaction 1: (B,D,2)
+Node n2 executed: (B,D,2)
+Node n3 executed: (B,D,2)
+Node n4 executed: (B,D,2)
+Node n1 executed: (B,D,2)
+Client B: Transaction (B,D,2) SUCCESS - Transaction executed successfully
+Transaction 2: (E,C,4)
+Node n2 executed: (E,C,4)
+Node n3 executed: (E,C,4)
+Node n4 executed: (E,C,4)
+Node n1 executed: (E,C,4)
+Client E: Transaction (E,C,4) SUCCESS - Transaction executed successfully
+Waiting for responses...
+
+============================== SYSTEM STATE ==============================
+
+=== Database for Node n1 ===
+A: 5
+B: 6
+C: 11
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n2 ===
+A: 5
+B: 6
+C: 11
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n3 ===
+A: 5
+B: 6
+C: 11
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n4 ===
+A: 5
+B: 6
+C: 11
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+Current Leader: n1
+===========================================================================
+
+Set 2 complete. Auto-continuing...
+
+==================================================
+Processing Set 3
+==================================================
+Simulating failure of n2
+Node n2 simulating failure
+Node n4 failed to send to n2: [Errno 111] Connection refused
+Simulating failure of n4
+Node n4 simulating failure
+Node n1 failed to send to n2: [Errno 111] Connection refused
+Node n1 failed to send to n4: [Errno 111] Connection refused
+Recovering n5
+Node n5 recovering
+Node n5 has log entries up to seq=4
+  seq=0 status=E transaction=(A,E,3)
+  seq=1 status=E transaction=(C,D,1)
+  seq=2 status=E transaction=(B,E,4)
+  seq=3 status=E transaction=(A,B,2)
+  seq=4 status=E transaction=(C,D,2)
+Node n5 sent catch-up request to n1
+Node n1 sending 2 catch-up entries to n5
+Node n5 failed to send to n2: [Errno 111] Connection refused
+Node n5 sent catch-up request to n3
+Node n5 received catch-up response with 2 entries
+Node n5 adding missing entry seq=5 status=C
+Node n5 adding missing entry seq=6 status=C
+Node n5 executing missed transaction: (B,D,2)
+Node n5 executed: (B,D,2)
+Node n5 executing missed transaction: (E,C,4)
+Node n5 executed: (E,C,4)
+Node n3 sending 2 catch-up entries to n5
+Node n5 failed to send to n4: [Errno 111] Connection refused
+Node n5 received catch-up response with 2 entries
+Node n5 failed to send to n2: [Errno 111] Connection refused
+Node n5 failed to send to n4: [Errno 111] Connection refused
+Node n3 failed to send to n2: [Errno 111] Connection refused
+Node n3 failed to send to n4: [Errno 111] Connection refused
+Node n1 failed to send to n2: [Errno 111] Connection refused
+Node n1 failed to send to n4: [Errno 111] Connection refused
+Node n5 failed to send to n2: [Errno 111] Connection refused
+Node n5 failed to send to n4: [Errno 111] Connection refused
+Processing 2 items:
+  1. (B,A,3)
+  2. (C,A,2)
+
+Sending 2 remaining transactions...
+Transaction 1: (B,A,3)
+Transaction 2: (C,A,2)
+Client B: Transaction (B,A,3) TIMEOUT
+Client C: Transaction (C,A,2) TIMEOUT
+Waiting for responses...
+
+============================== SYSTEM STATE ==============================
+
+=== Database for Node n1 ===
+A: 5
+B: 6
+C: 11
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n3 ===
+A: 5
+B: 6
+C: 11
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n5 ===
+A: 5
+B: 6
+C: 11
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+Current Leader: n1
+===========================================================================
+
+Set 3 complete. Auto-continuing...
+
+==================================================
+Processing Set 4
+==================================================
+Recovering n2
+Node n2 recovering
+Node n2 has log entries up to seq=6
+  seq=0 status=E transaction=(A,E,3)
+  seq=1 status=E transaction=(C,D,1)
+  seq=2 status=E transaction=(B,E,4)
+  seq=3 status=E transaction=(A,B,2)
+  seq=4 status=E transaction=(C,D,2)
+  seq=5 status=E transaction=(B,D,2)
+  seq=6 status=E transaction=(E,C,4)
+Node n2 sent catch-up request to n1
+Node n1 sending 2 catch-up entries to n2
+Node n2 sent catch-up request to n3
+Node n3 sending 2 catch-up entries to n2
+Node n2 received catch-up response with 2 entries
+Node n2 adding missing entry seq=7 status=A
+Node n2 adding missing entry seq=8 status=A
+Node n2 failed to send to n4: [Errno 111] Connection refused
+Node n2 received catch-up response with 2 entries
+Node n5 sending 2 catch-up entries to n2
+Node n2 sent catch-up request to n5
+Node n2 received catch-up response with 2 entries
+Node n2 failed to send to n4: [Errno 111] Connection refused
+Node n2 failed to send to n4: [Errno 111] Connection refused
+Processing 2 items:
+  1. (B,A,3)
+  2. (A,C,3)
+
+Sending 2 remaining transactions...
+Transaction 1: (B,A,3)
+Node n3 skipping sequence 7 (gap in log)
+Node n3 skipping sequence 8 (gap in log)
+Node n3 executed: (B,A,3)
+Node n1 skipping sequence 7 (gap in log)
+Node n1 skipping sequence 8 (gap in log)
+Node n1 executed: (B,A,3)
+Client B: Transaction (B,A,3) SUCCESS - Transaction executed successfully
+Node n2 skipping sequence 7 (gap in log)
+Node n2 skipping sequence 8 (gap in log)
+Node n2 executed: (B,A,3)
+Node n5 skipping sequence 7 (gap in log)
+Node n5 skipping sequence 8 (gap in log)
+Node n5 executed: (B,A,3)
+Transaction 2: (A,C,3)
+Node n3 executed: (A,C,3)
+Node n1 executed: (A,C,3)
+Client A: Transaction (A,C,3) SUCCESS - Transaction executed successfully
+Node n2 executed: (A,C,3)
+Node n5 executed: (A,C,3)
+Waiting for responses...
+
+============================== SYSTEM STATE ==============================
+
+=== Database for Node n1 ===
+A: 5
+B: 3
+C: 14
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n2 ===
+A: 5
+B: 3
+C: 14
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n3 ===
+A: 5
+B: 3
+C: 14
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n5 ===
+A: 5
+B: 3
+C: 14
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+Current Leader: n1
+===========================================================================
+
+Set 4 complete. Auto-continuing...
+
+==================================================
+Processing Set 5
+==================================================
+Simulating failure of n5
+Node n5 simulating failure
+Node n2 failed to send to n5: [Errno 111] Connection refused
+Node n3 failed to send to n5: [Errno 111] Connection refused
+Node n2 failed to send to n5: [Errno 111] Connection refused
+Simulating failure of n3
+Node n3 simulating failure
+Processing 2 items:
+  1. (C,B,1)
+  2. (D,A,2)
+
+Sending 2 remaining transactions...
+Transaction 1: (C,B,1)
+Transaction 2: (D,A,2)
+Client C: Transaction (C,B,1) TIMEOUT
+Client D: Transaction (D,A,2) TIMEOUT
+Waiting for responses...
+
+============================== SYSTEM STATE ==============================
+
+=== Database for Node n1 ===
+A: 5
+B: 3
+C: 14
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n2 ===
+A: 5
+B: 3
+C: 14
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+Current Leader: n1
+===========================================================================
+
+Set 5 complete. Auto-continuing...
+
+==================================================
+Processing Set 6
+==================================================
+Recovering n5
+Node n5 recovering
+Node n5 has log entries up to seq=10
+  seq=0 status=E transaction=(A,E,3)
+  seq=1 status=E transaction=(C,D,1)
+  seq=2 status=E transaction=(B,E,4)
+  seq=3 status=E transaction=(A,B,2)
+  seq=4 status=E transaction=(C,D,2)
+  seq=5 status=E transaction=(B,D,2)
+  seq=6 status=E transaction=(E,C,4)
+  seq=7 status=A transaction=(B,A,3)
+  seq=8 status=A transaction=(C,A,2)
+  seq=9 status=E transaction=(B,A,3)
+  seq=10 status=E transaction=(A,C,3)
+Node n5 sent catch-up request to n1
+Node n1 sending 2 catch-up entries to n5
+Node n5 sent catch-up request to n2
+Node n2 sending 2 catch-up entries to n5
+Node n5 received catch-up response with 2 entries
+Node n5 adding missing entry seq=11 status=A
+Node n5 adding missing entry seq=12 status=A
+Node n5 failed to send to n3: [Errno 111] Connection refused
+Node n5 received catch-up response with 2 entries
+Node n5 failed to send to n4: [Errno 111] Connection refused
+Node n5 failed to send to n3: [Errno 111] Connection refused
+Node n5 failed to send to n4: [Errno 111] Connection refused
+Node n5 failed to send to n3: [Errno 111] Connection refused
+Node n5 failed to send to n4: [Errno 111] Connection refused
+Recovering n3
+Node n3 recovering
+Node n3 has log entries up to seq=10
+  seq=0 status=E transaction=(A,E,3)
+  seq=1 status=E transaction=(C,D,1)
+  seq=2 status=E transaction=(B,E,4)
+  seq=3 status=E transaction=(A,B,2)
+  seq=4 status=E transaction=(C,D,2)
+  seq=5 status=E transaction=(B,D,2)
+  seq=6 status=E transaction=(E,C,4)
+  seq=7 status=A transaction=(B,A,3)
+  seq=8 status=A transaction=(C,A,2)
+  seq=9 status=E transaction=(B,A,3)
+  seq=10 status=E transaction=(A,C,3)
+Node n3 sent catch-up request to n1
+Node n1 sending 2 catch-up entries to n3
+Node n3 sent catch-up request to n2
+Node n2 sending 2 catch-up entries to n3
+Node n3 received catch-up response with 2 entries
+Node n3 adding missing entry seq=11 status=A
+Node n3 adding missing entry seq=12 status=A
+Node n3 failed to send to n4: [Errno 111] Connection refused
+Node n5 sending 2 catch-up entries to n3
+Node n3 sent catch-up request to n5
+Node n3 received catch-up response with 2 entries
+Node n3 received catch-up response with 2 entries
+Node n3 failed to send to n4: [Errno 111] Connection refused
+Node n5 failed to send to n4: [Errno 111] Connection refused
+Node n3 failed to send to n4: [Errno 111] Connection refused
+Recovering n4
+Node n4 recovering
+Node n4 has log entries up to seq=6
+  seq=0 status=E transaction=(A,E,3)
+  seq=1 status=E transaction=(C,D,1)
+  seq=2 status=E transaction=(B,E,4)
+  seq=3 status=E transaction=(A,B,2)
+  seq=4 status=E transaction=(C,D,2)
+  seq=5 status=E transaction=(B,D,2)
+  seq=6 status=E transaction=(E,C,4)
+Node n4 sent catch-up request to n1
+Node n1 sending 6 catch-up entries to n4
+Node n4 sent catch-up request to n2
+Node n2 sending 6 catch-up entries to n4
+Node n4 received catch-up response with 6 entries
+Node n4 adding missing entry seq=7 status=A
+Node n4 adding missing entry seq=8 status=A
+Node n4 adding missing entry seq=9 status=C
+Node n4 adding missing entry seq=10 status=C
+Node n4 adding missing entry seq=11 status=A
+Node n4 adding missing entry seq=12 status=A
+Node n4 executing missed transaction: (B,A,3)
+Node n4 executed: (B,A,3)
+Node n4 executing missed transaction: (A,C,3)
+Node n4 executed: (A,C,3)
+Node n4 received catch-up response with 6 entries
+Node n3 sending 6 catch-up entries to n4
+Node n4 sent catch-up request to n3
+Node n4 received catch-up response with 6 entries
+Node n4 sent catch-up request to n5
+Node n5 sending 6 catch-up entries to n4
+Node n4 received catch-up response with 6 entries
+Node n5 detected failure of n4
+Processing 1 items:
+  1. (A,B,4)
+
+Sending 1 remaining transactions...
+Transaction 1: (A,B,4)
+Node n1 skipping sequence 11 (gap in log)
+Node n1 skipping sequence 12 (gap in log)
+Node n1 executed: (A,B,4)
+Client A: Transaction (A,B,4) SUCCESS - Transaction executed successfully
+Node n5 skipping sequence 11 (gap in log)
+Node n5 skipping sequence 12 (gap in log)
+Node n5 executed: (A,B,4)
+Node n3 skipping sequence 11 (gap in log)
+Node n3 skipping sequence 12 (gap in log)
+Node n3 executed: (A,B,4)
+Node n4 skipping sequence 11 (gap in log)
+Node n4 skipping sequence 12 (gap in log)
+Node n4 executed: (A,B,4)
+Node n2 skipping sequence 11 (gap in log)
+Node n2 skipping sequence 12 (gap in log)
+Node n2 executed: (A,B,4)
+Waiting for responses...
+
+============================== SYSTEM STATE ==============================
+
+=== Database for Node n1 ===
+A: 1
+B: 7
+C: 14
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n2 ===
+A: 1
+B: 7
+C: 14
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n3 ===
+A: 1
+B: 7
+C: 14
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n4 ===
+A: 1
+B: 7
+C: 14
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n5 ===
+A: 1
+B: 7
+C: 14
+D: 15
+E: 13
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+Current Leader: n1
+===========================================================================
+
+Set 6 complete. Auto-continuing...
+
+==================================================
+Processing Set 7
+==================================================
+Processing 2 items:
+  1. (B,C,1)
+  2. (E,A,2)
+
+Sending 2 remaining transactions...
+Transaction 1: (B,C,1)
+Client B: Transaction (B,C,1) TIMEOUT
+Node n1 executed: (B,C,1)
+Node n5 executed: (B,C,1)
+Node n3 executed: (B,C,1)
+Node n4 executed: (B,C,1)
+Node n2 executed: (B,C,1)
+Transaction 2: (E,A,2)
+Node n1 executed: (E,A,2)
+Client E: Transaction (E,A,2) SUCCESS - Transaction executed successfully
+Node n5 executed: (E,A,2)
+Node n3 executed: (E,A,2)
+Node n4 executed: (E,A,2)
+Node n2 executed: (E,A,2)
+Waiting for responses...
+
+============================== SYSTEM STATE ==============================
+
+=== Database for Node n1 ===
+A: 3
+B: 6
+C: 15
+D: 15
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n2 ===
+A: 3
+B: 6
+C: 15
+D: 15
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n3 ===
+A: 3
+B: 6
+C: 15
+D: 15
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n4 ===
+A: 3
+B: 6
+C: 15
+D: 15
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n5 ===
+A: 3
+B: 6
+C: 15
+D: 15
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+Current Leader: n1
+===========================================================================
+
+Set 7 complete. Auto-continuing...
+
+==================================================
+Processing Set 8
+==================================================
+Simulating failure of n5
+Node n5 simulating failure
+Simulating failure of n4
+Node n4 simulating failure
+Node n3 failed to send to n4: [Errno 111] Connection refused
+Node n3 failed to send to n5: [Errno 111] Connection refused
+Processing 5 items:
+  1. (E,A,3)
+  2. (D,B,2)
+  3. (C,D,2)
+  4. (B,C,2)
+  5. (E,B,1)
+
+Sending 5 remaining transactions...
+Transaction 1: (E,A,3)
+Client E: Transaction (E,A,3) TIMEOUT
+Transaction 2: (D,B,2)
+Transaction 3: (C,D,2)
+Client C: Transaction (C,D,2) TIMEOUT
+Client D: Transaction (D,B,2) TIMEOUT
+Transaction 4: (B,C,2)
+Transaction 5: (E,B,1)
+Client B: Transaction (B,C,2) TIMEOUT
+Client E: Transaction (E,B,1) TIMEOUT
+Waiting for responses...
+
+============================== SYSTEM STATE ==============================
+
+=== Database for Node n1 ===
+A: 3
+B: 6
+C: 15
+D: 15
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n2 ===
+A: 3
+B: 6
+C: 15
+D: 15
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n3 ===
+A: 3
+B: 6
+C: 15
+D: 15
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+Current Leader: n1
+===========================================================================
+
+Set 8 complete. Auto-continuing...
+
+==================================================
+Processing Set 9
+==================================================
+Recovering n5
+Node n5 recovering
+Node n5 has log entries up to seq=15
+  seq=0 status=E transaction=(A,E,3)
+  seq=1 status=E transaction=(C,D,1)
+  seq=2 status=E transaction=(B,E,4)
+  seq=3 status=E transaction=(A,B,2)
+  seq=4 status=E transaction=(C,D,2)
+  seq=5 status=E transaction=(B,D,2)
+  seq=6 status=E transaction=(E,C,4)
+  seq=7 status=A transaction=(B,A,3)
+  seq=8 status=A transaction=(C,A,2)
+  seq=9 status=E transaction=(B,A,3)
+  seq=10 status=E transaction=(A,C,3)
+  seq=11 status=A transaction=(C,B,1)
+  seq=12 status=A transaction=(D,A,2)
+  seq=13 status=E transaction=(A,B,4)
+  seq=14 status=E transaction=(B,C,1)
+  seq=15 status=E transaction=(E,A,2)
+Node n5 sent catch-up request to n1
+Node n1 sending 5 catch-up entries to n5
+Node n5 sent catch-up request to n2
+Node n2 sending 5 catch-up entries to n5
+Node n5 received catch-up response with 5 entries
+Node n5 adding missing entry seq=16 status=A
+Node n5 adding missing entry seq=17 status=A
+Node n5 adding missing entry seq=18 status=A
+Node n5 adding missing entry seq=19 status=A
+Node n5 adding missing entry seq=20 status=A
+Node n5 received catch-up response with 5 entries
+Node n5 sent catch-up request to n3
+Node n3 sending 5 catch-up entries to n5
+Node n5 failed to send to n4: [Errno 111] Connection refused
+Node n5 received catch-up response with 5 entries
+Node n5 failed to send to n4: [Errno 111] Connection refused
+Node n5 failed to send to n4: [Errno 111] Connection refused
+Recovering n4
+Node n4 recovering
+Node n4 has log entries up to seq=15
+  seq=0 status=E transaction=(A,E,3)
+  seq=1 status=E transaction=(C,D,1)
+  seq=2 status=E transaction=(B,E,4)
+  seq=3 status=E transaction=(A,B,2)
+  seq=4 status=E transaction=(C,D,2)
+  seq=5 status=E transaction=(B,D,2)
+  seq=6 status=E transaction=(E,C,4)
+  seq=7 status=A transaction=(B,A,3)
+  seq=8 status=A transaction=(C,A,2)
+  seq=9 status=E transaction=(B,A,3)
+  seq=10 status=E transaction=(A,C,3)
+  seq=11 status=A transaction=(C,B,1)
+  seq=12 status=A transaction=(D,A,2)
+  seq=13 status=E transaction=(A,B,4)
+  seq=14 status=E transaction=(B,C,1)
+  seq=15 status=E transaction=(E,A,2)
+Node n4 sent catch-up request to n1
+Node n4 sent catch-up request to n2
+Node n1 sending 5 catch-up entries to n4
+Node n2 sending 5 catch-up entries to n4
+Node n4 sent catch-up request to n3
+Node n3 sending 5 catch-up entries to n4
+Node n4 sent catch-up request to n5
+Node n4 received catch-up response with 5 entries
+Node n4 adding missing entry seq=16 status=A
+Node n4 adding missing entry seq=17 status=A
+Node n4 adding missing entry seq=18 status=A
+Node n4 adding missing entry seq=19 status=A
+Node n4 adding missing entry seq=20 status=A
+Node n4 received catch-up response with 5 entries
+Node n5 sending 5 catch-up entries to n4
+Node n4 received catch-up response with 5 entries
+Node n4 received catch-up response with 5 entries
+Processing 3 items:
+  1. (E,D,1)
+  2. (B,D,2)
+  3. (A,E,1)
+
+Sending 3 remaining transactions...
+Transaction 1: (E,D,1)
+Node n3 skipping sequence 16 (gap in log)
+Node n3 skipping sequence 17 (gap in log)
+Node n3 skipping sequence 18 (gap in log)
+Node n3 skipping sequence 19 (gap in log)
+Node n3 skipping sequence 20 (gap in log)
+Node n3 executed: (E,D,1)
+Node n2 skipping sequence 16 (gap in log)
+Node n2 skipping sequence 17 (gap in log)
+Node n2 skipping sequence 18 (gap in log)
+Node n2 skipping sequence 19 (gap in log)
+Node n2 skipping sequence 20 (gap in log)
+Node n2 executed: (E,D,1)
+Node n1 skipping sequence 16 (gap in log)
+Node n1 skipping sequence 17 (gap in log)
+Node n1 skipping sequence 18 (gap in log)
+Node n1 skipping sequence 19 (gap in log)
+Node n1 skipping sequence 20 (gap in log)
+Node n1 executed: (E,D,1)
+Client E: Transaction (E,D,1) SUCCESS - Transaction executed successfully
+Node n5 skipping sequence 16 (gap in log)
+Node n5 skipping sequence 17 (gap in log)
+Node n5 skipping sequence 18 (gap in log)
+Node n5 skipping sequence 19 (gap in log)
+Node n5 skipping sequence 20 (gap in log)
+Node n5 executed: (E,D,1)
+Node n4 skipping sequence 16 (gap in log)
+Node n4 skipping sequence 17 (gap in log)
+Node n4 skipping sequence 18 (gap in log)
+Node n4 skipping sequence 19 (gap in log)
+Node n4 skipping sequence 20 (gap in log)
+Node n4 executed: (E,D,1)
+Transaction 2: (B,D,2)
+Client B: Transaction (B,D,2) TIMEOUT
+Node n3 executed: (B,D,2)
+Node n2 executed: (B,D,2)
+Node n1 executed: (B,D,2)
+Node n5 executed: (B,D,2)
+Node n4 executed: (B,D,2)
+Transaction 3: (A,E,1)
+Node n2 executed: (A,E,1)
+Node n1 executed: (A,E,1)
+Client A: Transaction (A,E,1) SUCCESS - Transaction executed successfully
+Node n5 executed: (A,E,1)
+Node n4 executed: (A,E,1)
+Node n3 executed: (A,E,1)
+Waiting for responses...
+
+============================== SYSTEM STATE ==============================
+
+=== Database for Node n1 ===
+A: 2
+B: 4
+C: 15
+D: 18
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n2 ===
+A: 2
+B: 4
+C: 15
+D: 18
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n3 ===
+A: 2
+B: 4
+C: 15
+D: 18
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n4 ===
+A: 2
+B: 4
+C: 15
+D: 18
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n5 ===
+A: 2
+B: 4
+C: 15
+D: 18
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+Current Leader: n1
+===========================================================================
+
+Set 9 complete. Auto-continuing...
+
+==================================================
+Processing Set 10
+==================================================
+Processing 10 items:
+  1. (A,B,1)
+  2. (D,E,1)
+  3. (D,E,1)
+  4. (E,A,1)
+  5. (B,C,1)
+  6. (A,B,1)
+  7. (C,D,1)
+  8. (E,A,1)
+  9. (B,C,1)
+  10. (C,D,1)
+
+Sending 10 remaining transactions...
+Transaction 1: (A,B,1)
+Node n3 executed: (A,B,1)
+Node n2 executed: (A,B,1)
+Node n1 executed: (A,B,1)
+Client A: Transaction (A,B,1) SUCCESS - Transaction executed successfully
+Node n5 executed: (A,B,1)
+Node n4 executed: (A,B,1)
+Transaction 2: (D,E,1)
+Node n3 executed: (D,E,1)
+Node n2 executed: (D,E,1)
+Node n1 executed: (D,E,1)
+Client D: Transaction (D,E,1) SUCCESS - Transaction executed successfully
+Node n5 executed: (D,E,1)
+Node n4 executed: (D,E,1)
+Transaction 3: (D,E,1)
+Node n3 executed: (D,E,1)
+Node n2 executed: (D,E,1)
+Node n1 executed: (D,E,1)
+Client D: Transaction (D,E,1) SUCCESS - Transaction executed successfully
+Node n5 executed: (D,E,1)
+Node n4 executed: (D,E,1)
+Transaction 4: (E,A,1)
+Node n3 executed: (E,A,1)
+Node n2 executed: (E,A,1)
+Node n1 executed: (E,A,1)
+Client E: Transaction (E,A,1) SUCCESS - Transaction executed successfully
+Node n5 executed: (E,A,1)
+Node n4 executed: (E,A,1)
+Transaction 5: (B,C,1)
+Node n3 executed: (B,C,1)
+Node n2 executed: (B,C,1)
+Node n1 executed: (B,C,1)
+Client B: Transaction (B,C,1) SUCCESS - Transaction executed successfully
+Node n5 executed: (B,C,1)
+Node n4 executed: (B,C,1)
+Transaction 6: (A,B,1)
+Node n3 executed: (A,B,1)
+Node n2 executed: (A,B,1)
+Node n1 executed: (A,B,1)
+Client A: Transaction (A,B,1) SUCCESS - Transaction executed successfully
+Node n5 executed: (A,B,1)
+Node n4 executed: (A,B,1)
+Transaction 7: (C,D,1)
+Node n3 executed: (C,D,1)
+Node n2 executed: (C,D,1)
+Node n1 executed: (C,D,1)
+Client C: Transaction (C,D,1) SUCCESS - Transaction executed successfully
+Node n5 executed: (C,D,1)
+Node n4 executed: (C,D,1)
+Transaction 8: (E,A,1)
+Node n3 executed: (E,A,1)
+Node n2 executed: (E,A,1)
+Node n1 executed: (E,A,1)
+Client E: Transaction (E,A,1) SUCCESS - Transaction executed successfully
+Node n5 executed: (E,A,1)
+Node n4 executed: (E,A,1)
+Transaction 9: (B,C,1)
+Node n3 executed: (B,C,1)
+Node n2 executed: (B,C,1)
+Node n1 executed: (B,C,1)
+Client B: Transaction (B,C,1) SUCCESS - Transaction executed successfully
+Node n5 executed: (B,C,1)
+Node n4 executed: (B,C,1)
+Transaction 10: (C,D,1)
+Node n3 executed: (C,D,1)
+Node n2 executed: (C,D,1)
+Node n1 executed: (C,D,1)
+Client C: Transaction (C,D,1) SUCCESS - Transaction executed successfully
+Node n5 executed: (C,D,1)
+Node n4 executed: (C,D,1)
+Waiting for responses...
+
+============================== SYSTEM STATE ==============================
+
+=== Database for Node n1 ===
+A: 2
+B: 4
+C: 15
+D: 18
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n2 ===
+A: 2
+B: 4
+C: 15
+D: 18
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n3 ===
+A: 2
+B: 4
+C: 15
+D: 18
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n4 ===
+A: 2
+B: 4
+C: 15
+D: 18
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+=== Database for Node n5 ===
+A: 2
+B: 4
+C: 15
+D: 18
+E: 11
+F: 10
+G: 10
+H: 10
+I: 10
+J: 10
+===================================
+
+Current Leader: n1
+===========================================================================
+
+Set 10 complete. Auto-continuing...
+Shutting down system...
+Client A shutting down...
+Client A stopped
+Client B shutting down...
+Client B stopped
+Client C shutting down...
+Client C stopped
+Client D shutting down...
+Client D stopped
+Client E shutting down...
+Client E stopped
+Client F shutting down...
+Client F stopped
+Client G shutting down...
+Client G stopped
+Client H shutting down...
+Client H stopped
+Client I shutting down...
+Client I stopped
+Client J shutting down...
+Client J stopped
+Node n1 shutting down...
+Node n1 stopped
+Node n2 shutting down...
+Node n2 stopped
+Node n3 shutting down...
+Node n3 stopped
+Node n4 shutting down...
+Node n4 stopped
+Node n5 shutting down...
+Node n5 stopped
+System shutdown complete.

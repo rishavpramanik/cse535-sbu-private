@@ -188,13 +188,8 @@ class PaxosLeader:
         if not self.state.is_leader:
             return False, "Not the leader"
         
-        # Check if consensus is possible with current alive nodes
-        total_nodes = len(self.node.all_nodes)
-        majority_needed = (total_nodes // 2) + 1
-        alive_count = len(self.node.alive_nodes)
-        
-        if alive_count < majority_needed:
-            return False, f"Insufficient nodes for consensus: {alive_count}/{total_nodes} (need {majority_needed})"
+        # Note: With insufficient nodes, we'll attempt consensus but it will hang
+        # This is the expected behavior - infinite retry until enough nodes are available
         
         with self.state.state_lock:
             seq_num = self.state.current_seq_num

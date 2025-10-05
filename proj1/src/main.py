@@ -78,8 +78,8 @@ class BankingSystem:
                     print(f"Processing Set {set_number}")
                     print(f"{'='*50}")
                     
-                    # Parse transactions
-                    transactions = parse_transactions(transactions_str)
+                    # Parse transactions and LF commands
+                    items = parse_transactions(transactions_str)
                     
                     # Parse live nodes
                     live_nodes = self._parse_live_nodes(live_nodes_str)
@@ -87,8 +87,8 @@ class BankingSystem:
                     # Update live nodes
                     self._update_live_nodes(live_nodes)
                     
-                    # Process transactions
-                    self._process_transaction_set(transactions)
+                    # Process transactions and LF commands
+                    self._process_transaction_set(items)
                     
                     # Allow time for processing
                     time.sleep(2)
@@ -118,6 +118,12 @@ class BankingSystem:
     
     def _update_live_nodes(self, live_nodes: Set[str]):
         """Update which nodes are live"""
+        # Resume any nodes from leader failure if they're in the live nodes list
+        for node_id in live_nodes:
+            if node_id in self.nodes and self.nodes[node_id].leader_failed:
+                print(f"Resuming {node_id} from leader failure")
+                self.nodes[node_id].resume_from_leader_failure()
+        
         # Nodes to fail
         nodes_to_fail = self.live_nodes - live_nodes
         # Nodes to recover
@@ -149,14 +155,58 @@ class BankingSystem:
                     if live_node != node_id:
                         node.last_heartbeat[live_node] = current_time
     
-    def _process_transaction_set(self, transactions: List[Transaction]):
-        """Process a set of transactions"""
-        print(f"Processing {len(transactions)} transactions:")
-        for i, transaction in enumerate(transactions):
-            print(f"  {i+1}. {transaction}")
+    def _process_transaction_set(self, items: List):
+        """Process a set of transactions and LF commands"""
+        print(f"Processing {len(items)} items:")
+        for i, item in enumerate(items):
+            if isinstance(item, str) and item == "LF":
+                print(f"  {i+1}. LF (Leader Failure)")
+            else:
+                print(f"  {i+1}. {item}")
+        print()
         
-        # Send transactions with delays
-        self.client_manager.send_transactions(transactions, delay=1.0)
+        # Process items in order, handling LF commands
+        current_transactions = []
+        
+        for item in items:
+            if isinstance(item, str) and item == "LF":
+                # Send accumulated transactions before LF
+                if current_transactions:
+                    print(f"Sending {len(current_transactions)} transactions before LF...")
+                    self._send_transactions_batch(current_transactions)
+                    current_transactions = []
+                
+                # Execute leader failure
+                self._execute_leader_failure()
+                
+            else:
+                # Accumulate transaction
+                current_transactions.append(item)
+        
+        # Send remaining transactions after all LF commands
+        if current_transactions:
+            print(f"Sending {len(current_transactions)} remaining transactions...")
+            self._send_transactions_batch(current_transactions)
+    
+    def _send_transactions_batch(self, transactions: List[Transaction]):
+        """Send a batch of transactions"""
+        for i, transaction in enumerate(transactions, 1):
+            print(f"Transaction {i}: {transaction}")
+            self.client_manager.send_transaction(transaction)
+            time.sleep(0.5)  # Small delay between transactions
+        
+        print("Waiting for responses...")
+        time.sleep(3)  # Wait for processing
+    
+    def _execute_leader_failure(self):
+        """Execute leader failure command"""
+        current_leader = self._get_current_leader()
+        if current_leader:
+            print(f"Executing LF: Simulating failure of leader {current_leader.node_id}")
+            current_leader.simulate_leader_failure()
+            time.sleep(1)  # Allow time for failure to take effect
+        else:
+            print("LF command: No current leader to fail")
     
     def _print_system_state(self):
         """Print current system state"""

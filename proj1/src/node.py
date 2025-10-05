@@ -36,6 +36,7 @@ class Node:
         # Communication
         self.socket = None
         self.running = False
+        self.leader_failed = False  # For leader failure simulation
         self.message_log = []  # All messages handled by this node
         self.pending_client_requests = {}  # seq_num -> (client_id, timestamp)
         
@@ -161,6 +162,10 @@ class Node:
     
     def _handle_message(self, message: Message):
         """Handle incoming message"""
+        # If leader is failed (acting disconnected), ignore most messages except CLIENT_REQUEST
+        if self.leader_failed and message.msg_type != MessageType.CLIENT_REQUEST:
+            return
+        
         with self.log_lock:
             self.message_log.append(message)
         
@@ -222,28 +227,16 @@ class Node:
                 self.last_client_timestamps[client_id] = client_timestamp
                 self.client_responses[client_id] = response
         else:
-            # Check if consensus is possible with current alive nodes
-            total_nodes = len(self.all_nodes)
-            majority_needed = (total_nodes // 2) + 1
-            alive_count = len(self.alive_nodes)
-            
-            if alive_count < majority_needed:
-                # Insufficient nodes for consensus
+            # Redirect to leader
+            leader_id = self.paxos_state.leader_id
+            if leader_id and leader_id in self.alive_nodes:
                 response = ClientResponseMessage(
                     self.node_id, client_id, False, 
-                    f"Insufficient nodes for consensus: {alive_count}/{total_nodes} (need {majority_needed})", 
-                    client_timestamp)
+                    f"Not leader, try {leader_id}", client_timestamp)
             else:
-                # Redirect to leader
-                leader_id = self.paxos_state.leader_id
-                if leader_id and leader_id in self.alive_nodes:
-                    response = ClientResponseMessage(
-                        self.node_id, client_id, False, 
-                        f"Not leader, try {leader_id}", client_timestamp)
-                else:
-                    response = ClientResponseMessage(
-                        self.node_id, client_id, False, 
-                        "No leader available", client_timestamp)
+                response = ClientResponseMessage(
+                    self.node_id, client_id, False, 
+                    "No leader available", client_timestamp)
             
             self.send_message(response)
             
@@ -275,14 +268,24 @@ class Node:
         with self.paxos_state.state_lock:
             for entry in self.paxos_state.accept_log:
                 if entry.seq_num > last_seq_num:
-                    catch_up_entries.append(entry)
+                    # Send a copy with original committed status (not executed status)
+                    catch_up_entry = LogEntry(
+                        seq_num=entry.seq_num,
+                        transaction=entry.transaction,
+                        is_noop=entry.is_noop,
+                        status="C" if entry.status == "E" else entry.status  # Convert E back to C for catch-up
+                    )
+                    catch_up_entries.append(catch_up_entry)
         
+        print(f"Node {self.node_id} sending {len(catch_up_entries)} catch-up entries to {message.sender_id}")
         response = CatchUpResponseMessage(self.node_id, message.sender_id, catch_up_entries)
         self.send_message(response)
     
     def _handle_catch_up_response(self, message: Message):
         """Handle catch-up response"""
         log_entries = [LogEntry.from_dict(entry) for entry in message.data['log_entries']]
+        
+        print(f"Node {self.node_id} received catch-up response with {len(log_entries)} entries")
         
         with self.paxos_state.state_lock:
             # Track what was our last executed sequence before catch-up
@@ -292,6 +295,7 @@ class Node:
                 # Add missing entries
                 existing = any(e.seq_num == entry.seq_num for e in self.paxos_state.accept_log)
                 if not existing:
+                    print(f"Node {self.node_id} adding missing entry seq={entry.seq_num} status={entry.status}")
                     self.paxos_state.accept_log.append(entry)
             
             # Sort by sequence number
@@ -299,11 +303,10 @@ class Node:
             
             # Execute any committed transactions that we missed
             for entry in self.paxos_state.accept_log:
-                if (entry.status == "C" and 
-                    entry.seq_num > old_last_executed and 
-                    entry.seq_num > self.paxos_state.last_executed_seq):
+                if (entry.status == "C" and entry.seq_num > old_last_executed):
                     
                     if not entry.is_noop and entry.transaction:
+                        print(f"Node {self.node_id} executing missed transaction: {entry.transaction}")
                         success = self._execute_transaction(entry)
                     
                     entry.status = "E"
@@ -441,6 +444,21 @@ class Node:
                         self.client_responses[client_id] = response
                         
                         del self.pending_client_requests[next_seq]
+                else:
+                    # Check if we should skip this sequence number
+                    # Only skip if there are higher committed sequences (deterministic)
+                    should_skip = False
+                    
+                    # Look for committed entries with higher sequence numbers
+                    for entry in self.paxos_state.accept_log:
+                        if entry.seq_num > next_seq and entry.status == "C":
+                            should_skip = True
+                            break
+                    
+                    if should_skip:
+                        print(f"Node {self.node_id} skipping sequence {next_seq} (gap in log)")
+                        self.paxos_state.last_executed_seq = next_seq
+                        continue
             
             time.sleep(0.1)
     
@@ -487,6 +505,22 @@ class Node:
         # Give a moment for socket to be released
         import time
         time.sleep(0.5)
+    
+    def simulate_leader_failure(self):
+        """Simulate leader failure - node acts disconnected but stays running"""
+        print(f"Node {self.node_id} simulating leader failure (acting disconnected)")
+        self.leader_failed = True
+        
+        # Step down as leader if currently leader
+        if self.paxos_state.is_leader:
+            self.paxos_state.is_leader = False
+            self.paxos_state.leader_id = None
+            print(f"Node {self.node_id} stepped down as leader due to failure simulation")
+    
+    def resume_from_leader_failure(self):
+        """Resume normal operations after leader failure simulation"""
+        print(f"Node {self.node_id} resuming from leader failure")
+        self.leader_failed = False
     
     def recover(self):
         """Recover from failure"""
@@ -571,11 +605,23 @@ class Node:
         last_seq = -1
         if self.paxos_state.accept_log:
             last_seq = max(entry.seq_num for entry in self.paxos_state.accept_log)
+            print(f"Node {self.node_id} has log entries up to seq={last_seq}")
+            for entry in sorted(self.paxos_state.accept_log, key=lambda x: x.seq_num):
+                print(f"  seq={entry.seq_num} status={entry.status} transaction={entry.transaction}")
         
+        # Try to get catch-up from any available node
+        catch_up_sent = False
         for node_id in self.all_nodes:
             if node_id != self.node_id:
                 catch_up_req = CatchUpRequestMessage(self.node_id, node_id, last_seq)
-                self.send_message(catch_up_req)
+                success = self.send_message(catch_up_req)
+                if success:
+                    catch_up_sent = True
+                    print(f"Node {self.node_id} sent catch-up request to {node_id}")
+                    # Don't break - send to multiple nodes for better reliability
+        
+        if not catch_up_sent:
+            print(f"Node {self.node_id} could not send catch-up requests to any node")
     
     # Print functions for debugging and testing
     def print_log(self):

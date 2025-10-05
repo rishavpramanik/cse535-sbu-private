@@ -7,7 +7,7 @@ import socket
 import threading
 import time
 import random
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Union
 from messages import *
 
 
@@ -221,6 +221,15 @@ class ClientManager:
         for client in self.clients.values():
             client.stop()
     
+    def send_transaction(self, transaction: Transaction) -> bool:
+        """Send a single transaction"""
+        client = self.clients.get(transaction.sender)
+        if client:
+            return client.send_transaction(transaction)
+        else:
+            print(f"Client {transaction.sender} not found")
+            return False
+    
     def send_transactions(self, transactions: List[Transaction], delay: float = 1.0):
         """Send a list of transactions with delays between them"""
         print(f"\nSending {len(transactions)} transactions...")
@@ -269,23 +278,42 @@ class ClientManager:
         return self.clients.get(client_id)
 
 
-def parse_transactions(transaction_str: str) -> List[Transaction]:
-    """Parse transaction string from CSV format"""
-    transactions = []
+def parse_transactions(transaction_str: str) -> List[Union[Transaction, str]]:
+    """Parse transaction string from CSV format, including LF commands"""
+    from typing import Union
+    items = []
     
     # Remove spaces and split by commas outside parentheses
     transaction_str = transaction_str.strip()
     
-    # Find all transactions in format (sender,receiver,amount)
+    # Split by commas, but handle parentheses properly
     import re
-    pattern = r'\(([A-E]),([A-E]),(\d+)\)'
-    matches = re.findall(pattern, transaction_str)
     
-    for match in matches:
-        sender, receiver, amount = match
-        transactions.append(Transaction(sender, receiver, int(amount)))
+    # Find all items: either transactions (sender,receiver,amount) or LF commands
+    # First find transactions
+    transaction_pattern = r'\(([A-E]),([A-E]),(\d+)\)'
+    transaction_matches = re.finditer(transaction_pattern, transaction_str)
     
-    return transactions
+    # Also find LF commands
+    lf_pattern = r'\bLF\b'
+    lf_matches = re.finditer(lf_pattern, transaction_str)
+    
+    # Combine and sort by position
+    all_matches = []
+    for match in transaction_matches:
+        sender, receiver, amount = match.groups()
+        all_matches.append((match.start(), Transaction(sender, receiver, int(amount))))
+    
+    for match in lf_matches:
+        all_matches.append((match.start(), "LF"))
+    
+    # Sort by position in string
+    all_matches.sort(key=lambda x: x[0])
+    
+    # Extract items in order
+    items = [item for _, item in all_matches]
+    
+    return items
 
 
 # Example usage and testing
