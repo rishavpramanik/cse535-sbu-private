@@ -48,6 +48,7 @@ help:
 	@echo "  $(GREEN)demo$(NC)          - Run interactive demo"
 	@echo "  $(GREEN)csv$(NC)           - Run with sample CSV input"
 	@echo "  $(GREEN)create-csv$(NC)    - Create sample CSV file"
+	@echo "  $(GREEN)reformat-csv$(NC)  - Reformat external CSV to our format"
 	@echo "  $(GREEN)clean$(NC)         - Clean up temporary files"
 	@echo "  $(GREEN)lint$(NC)          - Check code style (if available)"
 	@echo "  $(GREEN)install$(NC)       - Install dependencies (none required)"
@@ -118,6 +119,14 @@ create-csv:
 	@echo "$(BLUE)[INFO]$(NC) Creating sample CSV file: $(or $(FILE),$(SAMPLE_CSV))"
 	@cd $(SRC_DIR) && $(PYTHON) main.py create_csv ../$(or $(FILE),$(SAMPLE_CSV))
 	@echo "$(GREEN)[SUCCESS]$(NC) Sample CSV file created: $(or $(FILE),$(SAMPLE_CSV))"
+
+# Reformat CSV file from external format to our format
+.PHONY: reformat-csv
+reformat-csv:
+	@echo "$(BLUE)[INFO]$(NC) Reformatting CSV file: $(or $(FILE),CSE535-F25-Project-1-Testcases.csv)"
+	@test -f $(or $(FILE),CSE535-F25-Project-1-Testcases.csv) || (echo "$(RED)[ERROR]$(NC) CSV file not found: $(or $(FILE),CSE535-F25-Project-1-Testcases.csv)" && exit 1)
+	@$(PYTHON) $(SCRIPT_DIR)/reformat_csv.py
+	@echo "$(GREEN)[SUCCESS]$(NC) CSV file reformatted"
 
 # Clean up temporary files
 .PHONY: clean

@@ -80,7 +80,8 @@ class Node:
         
         # Start leader election if this is the first node
         if self.node_id == "n1":
-            timer = threading.Timer(1.0, lambda: self._safe_start_election(1))
+            # Wait a bit longer for all nodes to start before beginning election
+            timer = threading.Timer(3.0, lambda: self._safe_start_election(1))
             self.timers.append(timer)
             timer.start()
     
@@ -120,6 +121,9 @@ class Node:
     
     def _accept_connections(self):
         """Accept incoming connections"""
+        if not self.socket:
+            return  # No socket to accept on
+            
         while self.running:
             try:
                 client_socket, addr = self.socket.accept()
@@ -277,6 +281,10 @@ class Node:
     
     def _heartbeat_sender(self):
         """Send periodic heartbeats"""
+        # Wait a bit before starting heartbeats to let all nodes initialize
+        import time
+        time.sleep(2.0)
+        
         while self.running:
             for node_id in self.all_nodes:
                 if node_id != self.node_id and node_id in self.alive_nodes:
@@ -286,6 +294,10 @@ class Node:
     
     def _failure_detector(self):
         """Detect node failures"""
+        # Wait before starting failure detection to allow initial heartbeats
+        import time
+        time.sleep(5.0)
+        
         while self.running:
             current_time = time.time()
             failed_nodes = []
@@ -305,7 +317,9 @@ class Node:
                 if node_id == self.paxos_state.leader_id:
                     print(f"Node {self.node_id} leader {node_id} failed, starting election")
                     new_view = self.paxos_state.view_num + 1
-                    threading.Timer(1.0, lambda: self.paxos_leader.start_leader_election(new_view)).start()
+                    timer = threading.Timer(1.0, lambda: self._safe_start_election(new_view))
+                    self.timers.append(timer)
+                    timer.start()
             
             time.sleep(1.0)
     
@@ -369,25 +383,84 @@ class Node:
         """Simulate node failure"""
         print(f"Node {self.node_id} simulating failure")
         self.running = False
+        
+        # Cancel all timers
+        for timer in self.timers:
+            if timer.is_alive():
+                timer.cancel()
+        self.timers.clear()
+        
+        # Close socket properly
         if self.socket:
-            self.socket.close()
+            try:
+                # Shutdown the socket before closing to release it faster
+                self.socket.shutdown(socket.SHUT_RDWR)
+                self.socket.close()
+            except Exception:
+                pass
+            self.socket = None
+        
+        # Give a moment for socket to be released
+        import time
+        time.sleep(0.5)
     
     def recover(self):
         """Recover from failure"""
         print(f"Node {self.node_id} recovering")
         self.running = True
         
-        # Restart socket
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind((self.host, self.port))
-        self.socket.listen(10)
+        # Clear old timers list
+        self.timers.clear()
         
-        # Restart threads
-        threading.Thread(target=self._accept_connections, daemon=True).start()
-        threading.Thread(target=self._heartbeat_sender, daemon=True).start()
-        threading.Thread(target=self._failure_detector, daemon=True).start()
-        threading.Thread(target=self._transaction_executor, daemon=True).start()
+        # Try to restart socket with retry logic
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # Create new socket
+                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                # Also set SO_REUSEPORT if available (Linux)
+                try:
+                    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+                except AttributeError:
+                    pass  # SO_REUSEPORT not available on this system
+                self.socket.bind((self.host, self.port))
+                self.socket.listen(10)
+                break
+            except OSError as e:
+                if e.errno == 98:  # Address already in use
+                    print(f"Node {self.node_id} port {self.port} still in use, retrying... (attempt {attempt + 1}/{max_retries})")
+                    import time
+                    time.sleep(1.0)  # Wait longer between attempts
+                    if self.socket:
+                        try:
+                            self.socket.close()
+                        except Exception:
+                            pass
+                        self.socket = None
+                else:
+                    raise e
+        else:
+            # If we exhausted all retries, try a different approach
+            print(f"Node {self.node_id} could not bind to original port, continuing without socket server...")
+            self.socket = None
+            # Continue without server socket - node can still send messages
+        
+        # Restart threads and track them (only start accept_connections if we have a socket)
+        threads_to_start = []
+        if self.socket:
+            threads_to_start.append(threading.Thread(target=self._accept_connections, daemon=True))
+        
+        threads_to_start.extend([
+            threading.Thread(target=self._heartbeat_sender, daemon=True),
+            threading.Thread(target=self._failure_detector, daemon=True),
+            threading.Thread(target=self._transaction_executor, daemon=True)
+        ])
+        
+        self.threads.extend(threads_to_start)
+        
+        for thread in threads_to_start:
+            thread.start()
         
         # Request catch-up from other nodes
         self._request_catch_up()
