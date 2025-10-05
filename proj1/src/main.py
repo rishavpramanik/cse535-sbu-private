@@ -31,9 +31,9 @@ class BankingSystem:
         """Initialize all nodes and clients"""
         print("Initializing Distributed Paxos Banking System...")
         
-        # Create client manager and clients first
+        # Create client manager and clients first (10 clients as per specification)
         self.client_manager = ClientManager(self.all_nodes_config)
-        self.client_manager.create_clients(['A', 'B', 'C', 'D', 'E'])
+        self.client_manager.create_clients(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'])
         
         # Create and start all nodes with client port information
         for node_id, (host, port) in self.all_nodes_config.items():
@@ -274,11 +274,12 @@ class BankingSystem:
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['SetNumber', 'Transactions', 'LiveNodes'])
-            writer.writerow([1, '(A,C,5),(C,E,4),(B,D,2),(E,A,10),(E,C,3)', '[n1,n2,n3,n4,n5]'])
-            writer.writerow([2, '(A,E,4),(C,A,1),(A,C,7)', '[n1,n3,n5]'])
-            writer.writerow([3, '(B,A,3),(D,B,6),(C,D,2)', '[n2,n3,n4,n5]'])
+            # Use all 10 clients (A-J) in sample transactions
+            writer.writerow([1, '(A,C,5),(C,E,4),(B,D,2),(E,A,10),(F,G,3),(H,I,1),(J,F,2)', '[n1,n2,n3,n4,n5]'])
+            writer.writerow([2, '(G,H,6),(I,J,8),(A,F,4)', '[n1,n3,n5]'])
+            writer.writerow([3, '(J,A,3),(B,I,5),(D,H,7)', '[n2,n3,n4,n5]'])
         
-        print(f"Sample CSV file '{filename}' created")
+        print(f"Sample CSV file '{filename}' created with 10-client support")
 
 
 def main():

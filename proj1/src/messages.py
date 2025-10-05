@@ -138,15 +138,41 @@ class CommitMessage(Message):
 
 
 class ClientRequestMessage(Message):
+    """Client request message in format ⟨REQUEST,t,τ,c⟩ where:
+    - t: transaction (sender, receiver, amount)
+    - τ: timestamp for exactly-once semantics
+    - c: client identifier
+    """
     def __init__(self, sender_id: str, receiver_id: str, transaction: Transaction, client_timestamp: int):
         super().__init__(MessageType.CLIENT_REQUEST, sender_id, receiver_id,
                         transaction=transaction.to_dict(), client_timestamp=client_timestamp)
+    
+    def __str__(self):
+        """String representation following specification format"""
+        t = self.data['transaction']
+        τ = self.data['client_timestamp']
+        c = self.sender_id
+        return f"⟨REQUEST,({t['sender']},{t['receiver']},{t['amount']}),{τ},{c}⟩"
 
 
 class ClientResponseMessage(Message):
+    """Client response message in format ⟨REPLY,b,τ,c,r⟩ where:
+    - b: ballot number (current leader's view)
+    - τ: timestamp from original request
+    - c: client identifier
+    - r: result (success/failed)
+    """
     def __init__(self, sender_id: str, receiver_id: str, success: bool, message: str, client_timestamp: int):
         super().__init__(MessageType.CLIENT_RESPONSE, sender_id, receiver_id,
                         success=success, message=message, client_timestamp=client_timestamp)
+    
+    def __str__(self):
+        """String representation following specification format"""
+        b = "current_ballot"  # Would need actual ballot number from context
+        τ = self.data['client_timestamp']
+        c = self.receiver_id
+        r = "success" if self.data['success'] else "failed"
+        return f"⟨REPLY,{b},{τ},{c},{r}⟩"
 
 
 class HeartbeatMessage(Message):

@@ -39,6 +39,10 @@ class Node:
         self.message_log = []  # All messages handled by this node
         self.pending_client_requests = {}  # seq_num -> (client_id, timestamp)
         
+        # Exactly-once semantics: track last processed timestamp per client
+        self.last_client_timestamps = {}  # client_id -> last_processed_timestamp
+        self.client_responses = {}  # client_id -> last_response_message
+        
         # Thread management
         self.threads = []  # Track all threads for proper shutdown
         self.timers = []   # Track all timers for proper shutdown
@@ -51,7 +55,8 @@ class Node:
         
     def initialize_balances(self):
         """Initialize client balances to 10 each"""
-        clients = ['A', 'B', 'C', 'D', 'E']
+        # Initialize all 10 clients as per specification
+        clients = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
         with self.balance_lock:
             for client in clients:
                 self.balances[client] = 10
@@ -188,31 +193,51 @@ class Node:
             print(f"Node {self.node_id} error handling {msg_type}: {e}")
     
     def _handle_client_request(self, message: Message):
-        """Handle client transaction request"""
+        """Handle client transaction request with exactly-once semantics"""
         transaction = Transaction.from_dict(message.data['transaction'])
+        client_id = message.sender_id
         client_timestamp = message.data['client_timestamp']
+        
+        # Check for exactly-once semantics
+        if client_id in self.last_client_timestamps:
+            last_timestamp = self.last_client_timestamps[client_id]
+            if client_timestamp <= last_timestamp:
+                # Duplicate request - resend last response
+                if client_id in self.client_responses:
+                    print(f"Node {self.node_id} resending response to {client_id} for duplicate request {client_timestamp}")
+                    self.send_message(self.client_responses[client_id])
+                return
         
         if self.paxos_state.is_leader:
             success, msg = self.paxos_leader.handle_client_request(
-                transaction, message.sender_id, client_timestamp)
+                transaction, client_id, client_timestamp)
             
             if not success:
-                # Send immediate failure response
+                # Send immediate failure response and store it
                 response = ClientResponseMessage(
-                    self.node_id, message.sender_id, False, msg, client_timestamp)
+                    self.node_id, client_id, False, msg, client_timestamp)
                 self.send_message(response)
+                
+                # Update exactly-once tracking
+                self.last_client_timestamps[client_id] = client_timestamp
+                self.client_responses[client_id] = response
         else:
             # Redirect to leader
             leader_id = self.paxos_state.leader_id
             if leader_id and leader_id in self.alive_nodes:
                 response = ClientResponseMessage(
-                    self.node_id, message.sender_id, False, 
+                    self.node_id, client_id, False, 
                     f"Not leader, try {leader_id}", client_timestamp)
             else:
                 response = ClientResponseMessage(
-                    self.node_id, message.sender_id, False, 
+                    self.node_id, client_id, False, 
                     "No leader available", client_timestamp)
+            
             self.send_message(response)
+            
+            # Update exactly-once tracking for redirect responses too
+            self.last_client_timestamps[client_id] = client_timestamp
+            self.client_responses[client_id] = response
     
     def _handle_heartbeat(self, message: Message):
         """Handle heartbeat message"""
@@ -398,6 +423,10 @@ class Node:
                         response = ClientResponseMessage(
                             self.node_id, client_id, success, msg, client_timestamp)
                         self.send_message(response)
+                        
+                        # Update exactly-once tracking
+                        self.last_client_timestamps[client_id] = client_timestamp
+                        self.client_responses[client_id] = response
                         
                         del self.pending_client_requests[next_seq]
             

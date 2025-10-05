@@ -307,7 +307,7 @@ if __name__ == "__main__":
     }
     
     client_manager = ClientManager(nodes)
-    client_manager.create_clients(['A', 'B', 'C', 'D', 'E'])
+    client_manager.create_clients(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'])
     
     print("Clients created and started")
     time.sleep(2)
