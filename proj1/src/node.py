@@ -228,7 +228,6 @@ class Node:
         # If this node was marked as failed, mark it as alive again
         if sender_id not in self.alive_nodes:
             self.alive_nodes.add(sender_id)
-            print(f"Node {self.node_id} detected recovery of {sender_id}")
     
     def _handle_catch_up_request(self, message: Message):
         """Handle catch-up request from recovering node"""
@@ -269,7 +268,6 @@ class Node:
                     
                     if entry.transaction.transaction_type != "noop":
                         success = self._execute_transaction(entry)
-                        print(f"Node {self.node_id} catch-up executed: {entry.transaction} (success: {success})")
                     
                     entry.status = "E"
                     self.paxos_state.last_executed_seq = entry.seq_num
@@ -400,11 +398,8 @@ class Node:
                         response = ClientResponseMessage(
                             self.node_id, client_id, success, msg, client_timestamp)
                         self.send_message(response)
-                        print(f"Node {self.node_id} sent response to client {client_id} for seq {next_seq}")
                         
                         del self.pending_client_requests[next_seq]
-                    elif self.paxos_state.is_leader:
-                        print(f"Node {self.node_id} (leader) no pending request for seq {next_seq}, available: {list(self.pending_client_requests.keys())}")
             
             time.sleep(0.1)
     
