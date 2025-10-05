@@ -142,6 +142,8 @@ class TestPaxosLeader(unittest.TestCase):
         self.mock_node.broadcast_message = Mock()
         self.mock_node.send_message = Mock()
         self.mock_node.pending_client_requests = {}
+        self.mock_node.alive_nodes = {"n1", "n2", "n3", "n4", "n5"}  # Mock alive nodes set
+        self.mock_node.add_timer = Mock()  # Mock timer management
         
         self.leader = PaxosLeader(self.mock_node)
     

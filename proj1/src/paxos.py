@@ -89,8 +89,11 @@ class PaxosLeader:
                 remote_log = [LogEntry.from_dict(entry) for entry in msg.data['accept_log']]
                 self._merge_accept_log(remote_log)
                 
-                # Check if we have majority
-                if len(self.state.prepare_responses[view_num]) >= 3:  # majority of 5
+                # Check if we have majority of total nodes (not just alive ones)
+                # In Paxos, we need majority of the full cluster size for safety
+                total_nodes = len(self.node.all_nodes)
+                majority_needed = (total_nodes // 2) + 1
+                if len(self.state.prepare_responses[view_num]) >= majority_needed:
                     self._become_leader(view_num)
                     return True
         return False
@@ -185,6 +188,14 @@ class PaxosLeader:
         if not self.state.is_leader:
             return False, "Not the leader"
         
+        # Check if consensus is possible with current alive nodes
+        total_nodes = len(self.node.all_nodes)
+        majority_needed = (total_nodes // 2) + 1
+        alive_count = len(self.node.alive_nodes)
+        
+        if alive_count < majority_needed:
+            return False, f"Insufficient nodes for consensus: {alive_count}/{total_nodes} (need {majority_needed})"
+        
         with self.state.state_lock:
             seq_num = self.state.current_seq_num
             self.state.current_seq_num += 1
@@ -213,8 +224,11 @@ class PaxosLeader:
                 
             self.state.accepted_responses[seq_num].add(msg.sender_id)
             
-            # Check if we have majority
-            if len(self.state.accepted_responses[seq_num]) >= 3:  # majority of 5
+            # Check if we have majority of total nodes (not just alive ones)
+            # In Paxos, we need majority of the full cluster size for safety
+            total_nodes = len(self.node.all_nodes)
+            majority_needed = (total_nodes // 2) + 1
+            if len(self.state.accepted_responses[seq_num]) >= majority_needed:
                 # Update local state to committed first
                 self._update_log_status(seq_num, "C")
                 

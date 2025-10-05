@@ -222,16 +222,28 @@ class Node:
                 self.last_client_timestamps[client_id] = client_timestamp
                 self.client_responses[client_id] = response
         else:
-            # Redirect to leader
-            leader_id = self.paxos_state.leader_id
-            if leader_id and leader_id in self.alive_nodes:
+            # Check if consensus is possible with current alive nodes
+            total_nodes = len(self.all_nodes)
+            majority_needed = (total_nodes // 2) + 1
+            alive_count = len(self.alive_nodes)
+            
+            if alive_count < majority_needed:
+                # Insufficient nodes for consensus
                 response = ClientResponseMessage(
                     self.node_id, client_id, False, 
-                    f"Not leader, try {leader_id}", client_timestamp)
+                    f"Insufficient nodes for consensus: {alive_count}/{total_nodes} (need {majority_needed})", 
+                    client_timestamp)
             else:
-                response = ClientResponseMessage(
-                    self.node_id, client_id, False, 
-                    "No leader available", client_timestamp)
+                # Redirect to leader
+                leader_id = self.paxos_state.leader_id
+                if leader_id and leader_id in self.alive_nodes:
+                    response = ClientResponseMessage(
+                        self.node_id, client_id, False, 
+                        f"Not leader, try {leader_id}", client_timestamp)
+                else:
+                    response = ClientResponseMessage(
+                        self.node_id, client_id, False, 
+                        "No leader available", client_timestamp)
             
             self.send_message(response)
             
@@ -291,7 +303,7 @@ class Node:
                     entry.seq_num > old_last_executed and 
                     entry.seq_num > self.paxos_state.last_executed_seq):
                     
-                    if entry.transaction.transaction_type != "noop":
+                    if not entry.is_noop and entry.transaction:
                         success = self._execute_transaction(entry)
                     
                     entry.status = "E"
@@ -481,6 +493,10 @@ class Node:
         print(f"Node {self.node_id} recovering")
         self.running = True
         
+        # Reset failure detection state
+        self.alive_nodes = set(self.all_nodes.keys())  # Assume all nodes are alive initially
+        self.last_heartbeat = {}  # Reset heartbeat tracking
+        
         # Clear old timers list
         self.timers.clear()
         
@@ -537,6 +553,10 @@ class Node:
         # Request catch-up from other nodes and announce recovery
         self._request_catch_up()
         self._announce_recovery()
+        
+        # Give some time for catch-up to complete
+        import time
+        time.sleep(1.0)
     
     def _announce_recovery(self):
         """Announce recovery to all other nodes"""

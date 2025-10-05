@@ -63,7 +63,7 @@ class BankingSystem:
         
         print("System shutdown complete.")
     
-    def process_csv_file(self, filename: str):
+    def process_csv_file(self, filename: str, auto_continue: bool = False):
         """Process CSV input file with test sets"""
         try:
             with open(filename, 'r') as file:
@@ -96,9 +96,13 @@ class BankingSystem:
                     # Print system state
                     self._print_system_state()
                     
-                    # Pause between sets
-                    print(f"\nSet {set_number} complete. Press Enter to continue...")
-                    input()
+                    # Pause between sets (unless auto-continue is enabled)
+                    if auto_continue:
+                        print(f"\nSet {set_number} complete. Auto-continuing...")
+                        time.sleep(2)  # Brief pause for readability
+                    else:
+                        print(f"\nSet {set_number} complete. Press Enter to continue...")
+                        input()
                     
         except FileNotFoundError:
             print(f"Error: File {filename} not found")
@@ -137,7 +141,13 @@ class BankingSystem:
         # Update alive nodes in all running nodes
         for node_id, node in self.nodes.items():
             if node.running:
+                # Update the alive nodes set to match live_nodes from CSV
                 node.alive_nodes = live_nodes.copy()
+                # Reset heartbeat tracking for proper failure detection
+                current_time = time.time()
+                for live_node in live_nodes:
+                    if live_node != node_id:
+                        node.last_heartbeat[live_node] = current_time
     
     def _process_transaction_set(self, transactions: List[Transaction]):
         """Process a set of transactions"""
@@ -311,7 +321,7 @@ def main():
             
             filename = sys.argv[2]
             system.initialize_system()
-            system.process_csv_file(filename)
+            system.process_csv_file(filename, auto_continue=True)
             
         elif mode == "interactive":
             system.initialize_system()
