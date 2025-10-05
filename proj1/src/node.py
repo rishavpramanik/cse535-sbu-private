@@ -13,11 +13,12 @@ from paxos import PaxosState, PaxosLeader, PaxosBackup
 
 
 class Node:
-    def __init__(self, node_id: str, port: int, all_nodes: Dict[str, Tuple[str, int]]):
+    def __init__(self, node_id: str, port: int, all_nodes: Dict[str, Tuple[str, int]], client_ports: Dict[str, int] = None):
         self.node_id = node_id
         self.port = port
         self.host = "localhost"
         self.all_nodes = all_nodes  # node_id -> (host, port)
+        self.client_ports = client_ports or {}  # client_id -> port
         
         # Locks (initialize first)
         self.balance_lock = threading.RLock()
@@ -221,7 +222,13 @@ class Node:
     
     def _handle_heartbeat_ack(self, message: Message):
         """Handle heartbeat acknowledgment"""
-        self.last_heartbeat[message.sender_id] = time.time()
+        sender_id = message.sender_id
+        self.last_heartbeat[sender_id] = time.time()
+        
+        # If this node was marked as failed, mark it as alive again
+        if sender_id not in self.alive_nodes:
+            self.alive_nodes.add(sender_id)
+            print(f"Node {self.node_id} detected recovery of {sender_id}")
     
     def _handle_catch_up_request(self, message: Message):
         """Handle catch-up request from recovering node"""
@@ -242,6 +249,9 @@ class Node:
         log_entries = [LogEntry.from_dict(entry) for entry in message.data['log_entries']]
         
         with self.paxos_state.state_lock:
+            # Track what was our last executed sequence before catch-up
+            old_last_executed = self.paxos_state.last_executed_seq
+            
             for entry in log_entries:
                 # Add missing entries
                 existing = any(e.seq_num == entry.seq_num for e in self.paxos_state.accept_log)
@@ -250,13 +260,32 @@ class Node:
             
             # Sort by sequence number
             self.paxos_state.accept_log.sort(key=lambda x: x.seq_num)
+            
+            # Execute any committed transactions that we missed
+            for entry in self.paxos_state.accept_log:
+                if (entry.status == "C" and 
+                    entry.seq_num > old_last_executed and 
+                    entry.seq_num > self.paxos_state.last_executed_seq):
+                    
+                    if entry.transaction.transaction_type != "noop":
+                        success = self._execute_transaction(entry)
+                        print(f"Node {self.node_id} catch-up executed: {entry.transaction} (success: {success})")
+                    
+                    entry.status = "E"
+                    self.paxos_state.last_executed_seq = entry.seq_num
     
     def send_message(self, message: Message):
-        """Send message to specific node"""
+        """Send message to specific node or client"""
         if message.receiver_id == "broadcast":
             self.broadcast_message(message)
             return
         
+        # Check if this is a client response
+        if (message.msg_type == MessageType.CLIENT_RESPONSE and 
+            message.receiver_id in self.client_ports):
+            return self._send_to_client(message)
+        
+        # Regular node-to-node message
         if message.receiver_id not in self.all_nodes:
             return False
         
@@ -270,6 +299,22 @@ class Node:
             return True
         except Exception as e:
             print(f"Node {self.node_id} failed to send to {message.receiver_id}: {e}")
+            return False
+    
+    def _send_to_client(self, message: Message):
+        """Send message to client"""
+        try:
+            client_id = message.receiver_id
+            port = self.client_ports[client_id]
+            
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5.0)
+            sock.connect(("localhost", port))
+            sock.send(message.to_json().encode())
+            sock.close()
+            return True
+        except Exception as e:
+            print(f"Node {self.node_id} failed to send to client {message.receiver_id}: {e}")
             return False
     
     def broadcast_message(self, message: Message):
@@ -355,8 +400,11 @@ class Node:
                         response = ClientResponseMessage(
                             self.node_id, client_id, success, msg, client_timestamp)
                         self.send_message(response)
+                        print(f"Node {self.node_id} sent response to client {client_id} for seq {next_seq}")
                         
                         del self.pending_client_requests[next_seq]
+                    elif self.paxos_state.is_leader:
+                        print(f"Node {self.node_id} (leader) no pending request for seq {next_seq}, available: {list(self.pending_client_requests.keys())}")
             
             time.sleep(0.1)
     
@@ -462,8 +510,17 @@ class Node:
         for thread in threads_to_start:
             thread.start()
         
-        # Request catch-up from other nodes
+        # Request catch-up from other nodes and announce recovery
         self._request_catch_up()
+        self._announce_recovery()
+    
+    def _announce_recovery(self):
+        """Announce recovery to all other nodes"""
+        for node_id in self.all_nodes:
+            if node_id != self.node_id:
+                # Send immediate heartbeat to announce we're back
+                heartbeat = HeartbeatMessage(self.node_id, node_id)
+                self.send_message(heartbeat)
     
     def _request_catch_up(self):
         """Request catch-up from other nodes"""

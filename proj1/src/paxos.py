@@ -215,12 +215,12 @@ class PaxosLeader:
             
             # Check if we have majority
             if len(self.state.accepted_responses[seq_num]) >= 3:  # majority of 5
-                # Send COMMIT
+                # Update local state to committed first
+                self._update_log_status(seq_num, "C")
+                
+                # Send COMMIT to other nodes
                 commit_msg = CommitMessage(self.state.node_id, "broadcast", seq_num)
                 self.node.broadcast_message(commit_msg)
-                
-                # Update local state
-                self._update_log_status(seq_num, "C")
                 
                 return True
         return False

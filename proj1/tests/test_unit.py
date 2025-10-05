@@ -310,7 +310,7 @@ class TestNodeInitialization(unittest.TestCase):
     
     def test_node_initialization(self):
         """Test node initialization"""
-        node = Node("n1", 5001, self.all_nodes)
+        node = Node("n1", 5001, self.all_nodes, {})
         
         self.assertEqual(node.node_id, "n1")
         self.assertEqual(node.port, 5001)
@@ -324,7 +324,7 @@ class TestNodeInitialization(unittest.TestCase):
     
     def test_transaction_execution_success(self):
         """Test successful transaction execution"""
-        node = Node("n1", 5001, self.all_nodes)
+        node = Node("n1", 5001, self.all_nodes, {})
         tx = Transaction("A", "B", 5)
         entry = LogEntry(0, tx, False, "C")
         
@@ -336,7 +336,7 @@ class TestNodeInitialization(unittest.TestCase):
     
     def test_transaction_execution_insufficient_funds(self):
         """Test transaction execution with insufficient funds"""
-        node = Node("n1", 5001, self.all_nodes)
+        node = Node("n1", 5001, self.all_nodes, {})
         tx = Transaction("A", "B", 15)  # More than A's balance
         entry = LogEntry(0, tx, False, "C")
         
@@ -348,7 +348,7 @@ class TestNodeInitialization(unittest.TestCase):
     
     def test_noop_transaction_execution(self):
         """Test no-op transaction execution"""
-        node = Node("n1", 5001, self.all_nodes)
+        node = Node("n1", 5001, self.all_nodes, {})
         entry = LogEntry(0, None, True, "C")
         
         result = node._execute_transaction(entry)

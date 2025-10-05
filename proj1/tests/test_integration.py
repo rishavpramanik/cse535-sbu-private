@@ -43,7 +43,7 @@ class TestLeaderElection(unittest.TestCase):
     
     def create_node(self, node_id, port):
         """Helper to create and track nodes for cleanup"""
-        node = Node(node_id, port, self.all_nodes)
+        node = Node(node_id, port, self.all_nodes, {})
         self.created_nodes.append(node)
         return node
     
@@ -172,7 +172,7 @@ class TestFailureHandling(unittest.TestCase):
     
     def create_node(self, node_id, port):
         """Helper to create and track nodes for cleanup"""
-        node = Node(node_id, port, self.all_nodes)
+        node = Node(node_id, port, self.all_nodes, {})
         self.created_nodes.append(node)
         return node
     
@@ -280,7 +280,7 @@ class TestTransactionExecution(unittest.TestCase):
     
     def create_node(self, node_id, port, all_nodes):
         """Helper to create and track nodes for cleanup"""
-        node = Node(node_id, port, all_nodes)
+        node = Node(node_id, port, all_nodes, {})
         self.created_nodes.append(node)
         return node
     
@@ -373,7 +373,7 @@ class TestEndToEndScenarios(unittest.TestCase):
     
     def create_node(self, node_id, port):
         """Helper to create and track nodes for cleanup"""
-        node = Node(node_id, port, self.all_nodes)
+        node = Node(node_id, port, self.all_nodes, {})
         self.created_nodes.append(node)
         return node
     

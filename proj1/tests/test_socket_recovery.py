@@ -18,7 +18,7 @@ def test_socket_recovery():
     
     # Create a single node for testing
     all_nodes = {"n1": ("localhost", 5001)}
-    node = Node("n1", 5001, all_nodes)
+    node = Node("n1", 5001, all_nodes, {})
     
     try:
         # Start the node

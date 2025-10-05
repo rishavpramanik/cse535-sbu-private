@@ -31,16 +31,16 @@ class BankingSystem:
         """Initialize all nodes and clients"""
         print("Initializing Distributed Paxos Banking System...")
         
-        # Create and start all nodes
+        # Create client manager and clients first
+        self.client_manager = ClientManager(self.all_nodes_config)
+        self.client_manager.create_clients(['A', 'B', 'C', 'D', 'E'])
+        
+        # Create and start all nodes with client port information
         for node_id, (host, port) in self.all_nodes_config.items():
-            node = Node(node_id, port, self.all_nodes_config)
+            node = Node(node_id, port, self.all_nodes_config, self.client_manager.client_ports)
             self.nodes[node_id] = node
             node.start()
             time.sleep(0.5)  # Small delay between node starts
-        
-        # Create client manager and clients
-        self.client_manager = ClientManager(self.all_nodes_config)
-        self.client_manager.create_clients(['A', 'B', 'C', 'D', 'E'])
         
         print("System initialized. Waiting for leader election...")
         time.sleep(3)  # Wait for initial leader election
